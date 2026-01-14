@@ -1,0 +1,2981 @@
+swagger: '2.0'
+x-stoplight:
+  id: zg24eoeudujp5
+info:
+  title: DAT
+  version: v2
+  description: "Accès et manipulation (ajout, modification) des données sur les DAT.\r\n\r\n01/08/2024 : \r\nCréation du swagger v1.\r\nDeux opérations : \r\n  - la restitution de la liste des DAT souscrits d'un contrat\r\n  - la consultation du détail d'un DAT d'un contrat\r\n\r\n12/11/2024 : \r\nMontée de version mineure v1.1\r\nAjout de nouvelles opérations :\r\n  - la restitution de la liste de produits DAT souscriptibles\r\nAjout de nouvelles données dans les objets existants\r\n\r\n11/04/2025 : \r\nMontée de version majeure v2\r\nAjout de nouvelles opérations :\r\n  - l'enregistrement d'une demande de souscription d'un DAT\r\n  - la restitution de la liste des taux paliers d'une souscription\r\n  - la consultation des bases de révision d'un produit pour une souscription\r\n  - la consultation des pénalités de taux pour une souscription\r\n  - la restitution de la liste des primes pour une souscription\r\n  - la consultation du détail d'un produit DAT\r\n  - la restitution de la liste des taux paliers d'un produit\r\n  - la consultation des bases de révision d'un produit pour un produit\r\n  - la consultation des pénalités de taux pour un produit\r\n  - la restitution de la liste des primes pour un produit\r\n  - la simulation de souscription de DAT\r\n  - le changement de statut d'une souscription d'un DAT  \r\nAjout d'objets en lien avec ces nouvelles opérations. \r\n\r\n15/07/2025 - Suite à remarques O.Tankoano - modification enum reimbursement_mode_indicator"
+  contact:
+    email: cellule-api@ca-titres.fr
+    url: 'http://www.ca-titres.fr/fr/'
+    name: Crédit Agricole Titres
+host: api.ca-titres.group.gca
+schemes:
+  - https
+  - http
+produces:
+  - application/json
+consumes:
+  - application/json
+paths:
+  '/adherents/{UOM_code}/contracts/{contract_id}/DAT_subscriptions':
+    get:
+      summary: Liste des DAT souscrits d'un contrat
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              returned_objects:
+                type: string
+                description: Détail des objets restitués
+              DAT_subscriptions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    DAT_subscription:
+                      $ref: '#/definitions/DATSubscription'
+                    DAT_subscription_overview:
+                      $ref: '#/definitions/DATSubscriptionOverview'
+                    DAT_product:
+                      $ref: '#/definitions/DATProduct'
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '403':
+          description: Forbidden
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '500':
+          description: Internal server error
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+      operationId: get-adherents-UOM_code-contracts-contract_id-DAT_subscriptions
+      description: Récupère une liste de DAT souscrits pour un contrat à partir des paramètres fournis.
+      parameters:
+        - in: query
+          name: returned_objects
+          type: string
+          description: 'Détail des objets restitués : "product" permet de restituer les caractéristiques de souscription d''un DAT, la vue d''ensemble du DAT souscrit et les caractéristiques du produit DAT. Si absent, seules les caractéristiques de souscription d''un DAT, la vue d''ensemble du DAT souscrit sont restituées'
+      x-stoplight:
+        id: 6mu16bhnu0vxp
+    parameters:
+      - type: string
+        name: UOM_code
+        in: path
+        description: Code adhérent (selon nomenclature CAM0303)
+        required: true
+      - type: string
+        name: contract_id
+        in: path
+        required: true
+        description: Identifiant contrat
+  '/adherents/{UOM_code}/contracts/{contract_id}/DAT_subscription_demands':
+    parameters:
+      - type: string
+        name: UOM_code
+        in: path
+        description: Code adhérent (selon nomenclature CAM0303)
+        required: true
+      - type: string
+        name: contract_id
+        in: path
+        required: true
+        description: Identifiant contrat
+    post:
+      summary: Enregistrement d'une demande de souscription d'un DAT
+      responses:
+        '201':
+          description: Created
+          schema:
+            type: object
+            required:
+              - validity_deadline
+            properties:
+              access_id:
+                type: string
+                description: "Identifiant de connexion\r\nsera repris pour l'identifiant de la saisie"
+              validity_deadline:
+                type: string
+                format: date
+                description: "Date de validité de la demande de souscription\r\n(opération purgée des référentiels TCC si date atteinte\r\nsi non renseignéé, par défaut : date de réception + 90 jours calendaires"
+              DAT_subscription:
+                $ref: '#/definitions/DATSubscription'
+              DAT_additional_data:
+                $ref: '#/definitions/DATAdditionalSimulatedData'
+              DAT_product:
+                $ref: '#/definitions/DATProduct'
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '400':
+          description: Bad Request
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '403':
+          description: Forbidden
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '404':
+          description: Not Found
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '409':
+          description: Conflict
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '500':
+          description: Internal Server Error
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+      operationId: post-adherents-UOM_code-contracts-contract_id-DAT_subscriptions
+      description: "Enregistre une demande de souscription de DAT non encore signée par le client (donc en devenir).\r\nPermet également de restituer les informations nécessaires à la génération du bordereau de souscription, à signer par le client."
+      parameters:
+        - in: body
+          name: body
+          schema:
+            type: object
+            required:
+              - access_id
+            properties:
+              access_id:
+                type: string
+                description: "Identifiant de connexion\r\nsera repris pour l'identifiant de la saisie"
+              validity_deadline:
+                type: string
+                format: date
+                description: "Date de validité de la demande de souscription\r\n(opération purgée des référentiels TCC si date atteinte\r\nsi non renseignéé, par défaut : date de réception + 90 jours calendaires"
+              DAT_subscription:
+                $ref: '#/definitions/DATSubscription'
+          description: Demande d'enregsitrement d'une souscription d'un produit DAT
+      x-stoplight:
+        id: 85yby17kagduq
+  '/adherents/{UOM_code}/contracts/{contract_id}/DAT_subscriptions/{DAT_subscription_id}':
+    parameters:
+      - type: string
+        name: UOM_code
+        in: path
+        required: true
+        description: Code adhérent (selon nomenclature CAM0303)
+      - type: string
+        name: contract_id
+        in: path
+        required: true
+        description: Identifiant contrat
+      - type: string
+        name: DAT_subscription_id
+        in: path
+        required: true
+        description: Identifiant de la souscription de DAT
+    get:
+      summary: Détail d'un DAT souscrit d'un contrat
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              returned_objects:
+                type: string
+                description: Détail des objets restitués
+              DAT_subscription:
+                $ref: '#/definitions/DATSubscription'
+              DAT_subscription_overview:
+                $ref: '#/definitions/DATSubscriptionOverview'
+              DAT_product:
+                $ref: '#/definitions/DATProduct'
+              DAT_subscription_details:
+                $ref: '#/definitions/DATSubscriptionDetails'
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '403':
+          description: Forbidden
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '404':
+          description: Not Found
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '500':
+          description: Internal Server Error
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+      operationId: get-adherents-UOM_code-contracts-contract_id-DAT_subscriptions-DAT_subscription_id
+      description: Renvoie les caractéristiques d'un DAT souscrit
+      parameters:
+        - type: string
+          in: query
+          name: returned_objects
+          description: 'Détail des objets restitués : "product" permet de restituer les caractéristiques de souscription d''un DAT, la vue d''ensemble du DAT souscrit, les caractéristiques du produit DAT ; "details" permet de restituer les caractéristiques de souscription d''un DAT, la vue d''ensemble du DAT souscrit et les données relatives à l''historique de souscription du DAT ; "full" permet de restituer les caractéristiques de souscription d''un DAT, la vue d''ensemble du DAT souscrit, les caractéristiques du produit DAT et les données relatives à l''historique de souscription du DAT ; Si absents, seules les caractéristiques de souscription d''un DAT, la vue d''ensemble du DAT souscrit sont restituées'
+      x-stoplight:
+        id: l4di28r1mvd1x
+  '/adherents/{UOM_code}/contracts/{contract_id}/DAT_subscriptions/{DAT_subscription_id}/level_rates':
+    get:
+      summary: Liste des taux paliers d'une souscription
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              UOM_code:
+                type: string
+                description: Code adhérent (selon nomenclature CAM0303)
+              contract_id:
+                type: string
+                description: Identifiant contrat
+              DAT_subscription_id:
+                type: string
+                description: Identifiant de la souscription de DAT
+              DAT_level_rates:
+                $ref: '#/definitions/DATLevelRate'
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '403':
+          description: Forbidden
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '404':
+          description: Not Found
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '500':
+          description: Internal server error
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+      operationId: get-adherents-UOM_code-contracts-contract_id-DAT_subscriptions-level_rates
+      description: "Renvoie la liste des taux paliers d'une souscription\r\n\r\n"
+      parameters: []
+      security: []
+      x-stoplight:
+        id: 7p7idd9qlx864
+    parameters:
+      - type: string
+        name: UOM_code
+        in: path
+        required: true
+        description: Code adhérent (selon nomenclature CAM0303)
+      - type: string
+        name: DAT_subscription_id
+        in: path
+        required: true
+        description: Identifiant de la souscription de DAT
+      - type: string
+        name: contract_id
+        in: path
+        required: true
+        description: Identifiant contrat
+  '/adherents/{UOM_code}/contracts/{contract_id}/DAT_subscriptions/{DAT_subscription_id}/reviewing_data':
+    get:
+      summary: Consultation des bases de révision d'un produit pour une souscription
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              UOM_code:
+                type: string
+                description: Code adhérent (selon nomenclature CAM0303)
+              contract_id:
+                type: string
+                description: Identifiant contrat
+              DAT_subscription_id:
+                type: string
+                description: Identifiant de la souscription de DAT
+              DAT_reviewing_data:
+                $ref: '#/definitions/DATReviewingData'
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '403':
+          description: Forbidden
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '404':
+          description: Not Found
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '500':
+          description: Internal server error
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+      operationId: get-adherents-UOM_code-contracts-contract_id-DAT_subscriptions-reviewing_data
+      description: Récupère des données des bases de révision d'un produit pour une souscription
+      parameters: []
+      security: []
+      x-stoplight:
+        id: zn1yq5osc53ae
+    parameters:
+      - type: string
+        name: UOM_code
+        in: path
+        required: true
+        description: Code adhérent (selon nomenclature CAM0303)
+      - type: string
+        name: contract_id
+        in: path
+        required: true
+        description: Identifiant contrat
+      - type: string
+        name: DAT_subscription_id
+        in: path
+        required: true
+        description: Identifiant de la souscription de DAT
+  '/adherents/{UOM_code}/contracts/{contract_id}/DAT_subscriptions/{DAT_subscription_id}/rate_penalties':
+    get:
+      summary: Consultation des pénalités de taux pour une souscription
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              UOM_code:
+                type: string
+                description: Code adhérent (selon nomenclature CAM0303)
+              contract_id:
+                type: string
+                description: Identifiant contrat
+              DAT_subscription_id:
+                type: string
+                description: Identifiant de la souscription de DAT
+              DAT_penalties:
+                $ref: '#/definitions/DATPenalties'
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '403':
+          description: Forbidden
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '404':
+          description: Not Found
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '500':
+          description: Internal server error
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+      operationId: get-adherents-UOM_code-contracts-contract_id-DAT_subscriptions-penalties
+      description: Renvoie les caractéristiques des pénalités d'une souscription ainsi que les valeurs de pénalités en durée restante (en mois) et en durée courue (en mois).
+      parameters: []
+      security: []
+      x-stoplight:
+        id: j8ot99ew8e6er
+    parameters:
+      - type: string
+        name: UOM_code
+        in: path
+        required: true
+        description: Code adhérent (selon nomenclature CAM0303)
+      - type: string
+        name: contract_id
+        in: path
+        required: true
+        description: Identifiant contrat
+      - type: string
+        name: DAT_subscription_id
+        in: path
+        required: true
+        description: Identifiant de la souscription de DAT
+  '/adherents/{UOM_code}/contracts/{contract_id}/DAT_subscriptions/{DAT_subscription_id}/premiums':
+    get:
+      summary: Liste des primes pour une souscription
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              UOM_code:
+                type: string
+                description: Code adhérent (selon nomenclature CAM0303)
+              contract_id:
+                type: string
+                description: Identifiant contrat
+              DAT_subscription_id:
+                type: string
+                description: Identifiant de la souscription de DAT
+              DAT_premiums:
+                type: array
+                items:
+                  $ref: '#/definitions/DATPremiums'
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '403':
+          description: Forbidden
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '500':
+          description: Internal server error
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+      operationId: get-adherents-UOM_code-contracts-contract_id-DAT_subscriptions-premiums-list
+      description: Restitution d'une liste de primes pour une souscritpion avec leur caractéristiques et leurs valeurs
+      parameters: []
+      security: []
+      x-stoplight:
+        id: dr8gt1l1xq7qp
+    parameters:
+      - type: string
+        name: UOM_code
+        in: path
+        required: true
+        description: Code adhérent (selon nomenclature CAM0303)
+      - type: string
+        name: contract_id
+        in: path
+        required: true
+        description: Identifiant contrat
+      - type: string
+        name: DAT_subscription_id
+        in: path
+        required: true
+        description: Identifiant de la souscription de DAT
+  '/adherents/{UOM_code}/DAT_products':
+    get:
+      summary: Liste de produits DAT souscriptibles
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              UOM_code:
+                type: string
+                description: "Rappel du code adhérent envoyé\r\n"
+              access_id:
+                type: string
+                description: "Rappel de l'identifiant de connexion envoyé\r\n\r\n"
+              contract_id:
+                type: string
+                description: "Rappel du contrat envoyé\r\n\r\n"
+              count:
+                type: integer
+                description: "Nombre d'occurences souhaitées \r\n\r\n"
+              page:
+                type: integer
+                description: " Numéro de la page souhaitée\r\n\r\n"
+              paging:
+                $ref: '#/definitions/Paging'
+              DAT_products:
+                type: array
+                items:
+                  $ref: '#/definitions/DATProductSearchResult'
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '403':
+          description: Forbidden
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '500':
+          description: Internal server error
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+      operationId: get-adherents-UOM_code-DAT_products
+      description: "Récupère une liste de produits DAT pouvant être souscrits à partir des paramètres fournis.\r\nLe résultat de recherche ainsi retourné correspond à une vue résumée de chaque produit."
+      parameters:
+        - type: string
+          in: query
+          name: contract_id
+          description: 'Présence d''un contrat : permet d''appliquer les contrôles supplémentaires liés au contrat renseigné pour restituer la liste des DAT qui lui sont accessibles. Absence du contrat : la liste des DAT souscritptibles est restituée uniquement en fonction des habilitations de l''utilisateur.'
+        - type: string
+          in: query
+          name: access_id
+          description: Identifiant de connexion
+        - type: integer
+          in: query
+          name: count
+          description: 'Nombre d''occurences souhaitées (par défaut : 100, au maximum : 100)'
+        - type: integer
+          in: query
+          name: page
+          description: ' Numéro de la page souhaitée (par défaut : 1)'
+      security: []
+      x-stoplight:
+        id: 39dq8pkb6swqh
+    parameters:
+      - type: string
+        name: UOM_code
+        in: path
+        required: true
+        description: Code adhérent (selon nomenclature CAM0303)
+  '/adherents/{UOM_code}/DAT_products/{product_code}':
+    get:
+      summary: Détails d'un produit DAT
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              UOM_code:
+                type: string
+                description: Code adhérent (selon nomenclature CAM0303)
+              DAT_product:
+                $ref: '#/definitions/DATProduct'
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '403':
+          description: Forbidden
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '404':
+          description: Not Found
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '500':
+          description: Internal server error
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+      operationId: get-adherents-UOM_code-DAT_products-product_code
+      description: Retourne la représentation d'un produit DAT désigné par son code.
+      x-stoplight:
+        id: 2ytey2d0uc85p
+    parameters:
+      - type: string
+        name: UOM_code
+        in: path
+        required: true
+        description: Code adhérent (selon nomenclature CAM0303)
+      - type: string
+        name: product_code
+        in: path
+        required: true
+        description: Code produit du DAT
+  '/adherents/{UOM_code}/DAT_products/{product_code}/level_rates':
+    get:
+      summary: Liste des taux paliers d'un produit
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              UOM_code:
+                type: string
+                description: Code adhérent (selon nomenclature CAM0303)
+              validity_date:
+                type: string
+                format: date
+              validity_hour:
+                type: string
+                format: time
+              requested_amount:
+                $ref: '#/definitions/Amount'
+              subscription_actuarial_rate:
+                type: number
+              subscription_nominal_rate:
+                type: number
+              DAT_level_rates:
+                $ref: '#/definitions/DATLevelRate'
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '403':
+          description: Forbidden
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '404':
+          description: Not Found
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '500':
+          description: Internal server error
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+      operationId: get-adherents-UOM_code-DAT_products-product_code-level_rates
+      description: Renvoie la liste des taux paliers d'un produit à partir des paramètres fournis.
+      parameters:
+        - type: string
+          in: query
+          name: validity_date
+          description: 'Date de consultation (par défaut : date du jour) '
+          format: date
+        - type: string
+          in: query
+          name: validity_hour
+          description: 'heure de consultation souhaitée (par défaut : heure de l''appel) '
+          format: time
+        - type: number
+          in: query
+          name: requested_amount
+          description: montant du placement
+          required: true
+        - type: string
+          in: query
+          name: requested_amount_currency
+          description: devise du montant du placement
+          required: true
+        - type: number
+          in: query
+          name: subscription_actuarial_rate
+          description: taux actuariel
+          required: true
+        - type: number
+          in: query
+          name: subscription_nominal_rate
+          description: taux nominal
+          required: true
+      security: []
+      x-stoplight:
+        id: ky6uxputkm9le
+    parameters:
+      - type: string
+        name: UOM_code
+        in: path
+        required: true
+        description: Code adhérent (selon nomenclature CAM0303)
+      - type: string
+        name: product_code
+        in: path
+        required: true
+        description: Code du produit
+  '/adherents/{UOM_code}/DAT_products/{product_code}/reviewing_data':
+    get:
+      summary: Consultation des bases de révision d'un produit
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              UOM_code:
+                type: string
+                description: Code adhérent (selon nomenclature CAM0303)
+              product_code:
+                type: string
+                description: code produit
+              date:
+                type: string
+                description: date de consultation souhaitée
+                format: date
+              time:
+                type: string
+                description: heure de consultation souhaitée
+                format: time
+              DAT_reviewing_data:
+                $ref: '#/definitions/DATReviewingData'
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '403':
+          description: Forbidden
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '404':
+          description: Not Found
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '500':
+          description: Internal server error
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+      operationId: get-adherents-UOM_code-DAT_products-product_code-reviewing_data
+      description: Récupère des données des bases de révision d'un produit à partir des paramètres fournis.
+      parameters:
+        - type: string
+          in: query
+          name: validity_date
+          description: 'Date de consultation souhaitée (par défaut : date du jour) '
+      security: []
+      x-stoplight:
+        id: lrgjrf1i7y95n
+    parameters:
+      - type: string
+        name: UOM_code
+        in: path
+        required: true
+        description: Code adhérent (selon nomenclature CAM0303)
+      - type: string
+        name: product_code
+        in: path
+        required: true
+        description: Code du produit
+  '/adherents/{UOM_code}/DAT_products/{product_code}/rate_penalties':
+    get:
+      summary: Consultation des pénalités de taux d'un produit
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              UOM_code:
+                type: string
+                description: Code adhérent (selon nomenclature CAM0303)
+              product_code:
+                type: string
+                description: code produit
+              subscription_date:
+                type: string
+                format: date
+                description: Date de consultation souhaitée
+              DAT_penalties:
+                $ref: '#/definitions/DATPenalties'
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '403':
+          description: Forbidden
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '404':
+          description: Not Found
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '500':
+          description: Internal server error
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+      operationId: get-adherents-UOM_code-DAT_products-product_code-penalties
+      description: Renvoie les caractéristiques des pénalités d'un produit ainsi que les valeurs de pénalités en durée restante (en mois) et en durée courue (en mois).
+      parameters:
+        - type: string
+          in: query
+          name: subscription_date
+          description: 'Date de consultation souhaitée (par défaut : date du jour) '
+      security: []
+      x-stoplight:
+        id: 0ccpq46x9xqaw
+    parameters:
+      - type: string
+        name: UOM_code
+        in: path
+        required: true
+        description: Code adhérent (selon nomenclature CAM0303)
+      - type: string
+        name: product_code
+        in: path
+        required: true
+        description: Code du produit
+  '/adherents/{UOM_code}/DAT_products/{product_code}/premiums':
+    get:
+      summary: Liste des primes d'un produit
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              UOM_code:
+                type: string
+                description: Code adhérent (selon nomenclature CAM0303)
+              subscription_date:
+                type: string
+                format: date
+                description: 'date de souscription, par défaut date du jour'
+              operation_date:
+                type: string
+                format: time
+                description: date d'opération (par défaut date du jour)
+              actuarial_rate:
+                type: number
+                description: taux actuarial
+              nominal_rate:
+                type: number
+                description: taux nominal
+              DAT_premiums:
+                type: array
+                items:
+                  $ref: '#/definitions/DATPremiums'
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '403':
+          description: Forbidden
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '500':
+          description: Internal server error
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+      operationId: get-adherents-UOM_code-DAT_products-product_code-premiums-list
+      description: 'Restitution d''une liste de primes d''un produit avec leurs caractéristiques et leurs valeurs, à partir des paramètres fournis.'
+      parameters:
+        - type: string
+          in: query
+          name: subscription_date
+          description: date de souscription
+          format: date
+        - type: string
+          in: query
+          name: operation_date
+          description: date d'opération
+          format: date
+        - type: number
+          in: query
+          name: actuarial_rate
+          description: taux actuarial
+        - type: number
+          in: query
+          name: nominal_rate
+          description: taux nominal
+      security: []
+      x-stoplight:
+        id: zoz19xuzqvkeb
+    parameters:
+      - type: string
+        name: UOM_code
+        in: path
+        required: true
+        description: Code adhérent (selon nomenclature CAM0303)
+      - type: string
+        name: product_code
+        in: path
+        required: true
+        description: Code du produit
+  '/adherents/{UOM_code}/DAT_subscription_simulations':
+    parameters:
+      - type: string
+        name: UOM_code
+        in: path
+        required: true
+        description: Code adhérent (selon nomenclature CAM0303)
+    post:
+      summary: Simulation de souscription de DAT
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              access_id:
+                type: string
+                description: "Rappel de l'identifiant de connexion envoyé\r\n\r\n"
+              DAT_simulation:
+                $ref: '#/definitions/DATSubscription'
+              DAT_additional_simulated_data:
+                $ref: '#/definitions/DATAdditionalSimulatedData'
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '400':
+          description: Bad Request
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '403':
+          description: Forbidden
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '404':
+          description: Not Found
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '409':
+          description: Conflict
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '500':
+          description: Internal Server Error
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+      operationId: post-adherents-UOM_code-DAT_simulations
+      description: "Permet la simulation de souscription de DAT sans enregistrement.\r\nUn critère obligatoire en entrée : l'adhérent.\r\nDeux critères facultatifs en entrée : le contrat et l'utilisateur (access_id représentant l'identifiant de connexion)."
+      parameters:
+        - in: body
+          name: body
+          schema:
+            type: object
+            properties:
+              simulation:
+                $ref: '#/definitions/DATSubscription'
+          description: Simulation de souscription de produit DAT
+        - type: string
+          in: query
+          name: access_id
+          description: Identifiant de connexion
+      x-stoplight:
+        id: r264t1fe4lwfl
+  '/adherents/{UOM_code}/contracts/{contract_id}/DAT_subscription_overviews/{DAT_subscription_id}/status':
+    parameters:
+      - type: string
+        name: UOM_code
+        in: path
+        required: true
+        description: Code adhérent (selon nomenclature CAM0303)
+      - type: string
+        name: contract_id
+        in: path
+        required: true
+        description: Identifiant contrat
+      - type: string
+        name: DAT_subscription_id
+        in: path
+        required: true
+        description: Identifiant de la souscription de DAT
+    put:
+      summary: Changement de statut d'une souscription d'un DAT
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '403':
+          description: Forbidden
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '404':
+          description: Not Found
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '409':
+          description: Conflict
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '500':
+          description: Internal Server Error
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+      operationId: put-adherents-UOM_code-contracts-contract_id-DAT_subscriptions_overview-DAT_subscription_id-status
+      description: "Permet de modifier le statut d'une souscription. \r\nInitialement créée en statut 'création différée, en attente accord du client', \r\nce statut peut donc ensuite être forcé à 'création souscription' pour excécution le soir ou 'annulation'."
+      parameters:
+        - in: body
+          name: body
+          schema:
+            type: object
+            required:
+              - status
+            properties:
+              status:
+                type: string
+                description: "Statut cible de la souscritpion : \r\n'7'  : passage à 'en cours de souscription'\r\n'9'  : passage à 'demande de souscription annulée'\r\n'8'  : passage à 'demande de souscription en attente de validation'\r\n"
+                enum:
+                  - '7'
+                  - '8'
+                  - '9'
+          description: demande de changement de statut
+      x-stoplight:
+        id: ovyrkgvdm7och
+  '/adherents/{UOM_code}/health':
+    parameters:
+      - type: string
+        name: UOM_code
+        in: path
+        required: true
+        description: Code adhérent (selon nomenclature CAM0303)
+    get:
+      summary: Sonde HEALTH
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '400':
+          description: Bad Request
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '403':
+          description: Forbidden
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '404':
+          description: Not Found
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+        '500':
+          description: Internal Server Error
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/definitions/Error'
+      operationId: get-adherents-UOM_code-health
+      description: Sonde Health
+      x-stoplight:
+        id: 8bqv19s6ymv6f
+definitions:
+  Error:
+    title: Error
+    type: object
+    properties:
+      code:
+        type: string
+        description: code anomalie
+      label:
+        type: string
+        description: libéllé d'anomalie
+      level:
+        type: string
+        description: "sévérité anomalie : vaut \r\n'E' en cas d'erreur bloquante, \r\n'I' en cas de message informatif"
+      program:
+        type: string
+        description: code programme à l'origine du message
+    x-stoplight:
+      id: d64b2q05y2t3o
+  Amount:
+    title: Amount
+    type: object
+    properties:
+      currency:
+        type: string
+        description: Devise
+      value:
+        type: number
+        description: Montant
+    x-stoplight:
+      id: ml33xif0o91jk
+  DATSubscription:
+    title: DATSubscription
+    type: object
+    description: |-
+      L'objet DATSubscription correspond à une souscription d'un produit DAT.
+      Il contient les informations nécessaires à l'action de souscription (les données d'entrée : contrat, identifiant du produit, versement initial ou échéancier de versement, + les informations de souscription (renouvellement programmé, caractéristiques variables).
+    required:
+      - UOM_code
+      - product_code
+      - subscription_date
+      - subscription_cash_account
+      - operation_amount
+    properties:
+      id:
+        type: string
+        description: "Identifiant unique de la souscription (NUDEB).\r\n\r\nSur 12 caractères."
+      UOM_code:
+        type: string
+        description: "Code adhérent sur 5 caractères\r\n"
+      contract_id:
+        type: string
+        description: "identifiant contrat sur 11 caractères\r\n"
+      product_code:
+        type: string
+        description: "code produit du DAT\r\n\r\nSur 6 caractères."
+      subscription_date:
+        type: string
+        description: "date de souscription du DAT\r\n\r\n"
+        format: date
+      duration_value:
+        type: number
+        description: durée du DAT souscrit
+      placement_duration_in_months:
+        type: number
+        description: Durée de placement en mois pour les produits à durée variable
+      placement_duration_in_days:
+        type: number
+        description: Durée de placement en jours pour les produits à durée variable
+      subscription_expiration_date:
+        type: string
+        description: "date échéance saisie pour les produits à durée variable\r\n"
+        format: date
+      customer_reference:
+        type: string
+        description: "Si opération  guichet GC et GK :\r\nZone d'échange libre permettant à l'Adhérent\r\nde récupérer des informations qui lui sont \r\npropres (ex: identification du Client).\r\n\r\n\r\nSi opération dépôt DC concernant un Produit \r\nréservé aux comptes séquestres:\r\nZone d'échange libre permettant à l'Adhérent \r\nde récupérer des informations telles que le \r\nnom de l'Apporteur d'affaires.\r\n\r\nSur 20 caractères."
+      nominal_rate:
+        type: number
+        description: taux nominal
+      actuarial_rate:
+        type: number
+        description: taux actuariel initial
+      customer_rate:
+        type: number
+        description: taux client
+      edition_langage_code:
+        type: string
+        description: "Code langue d'édition\r\n\r\n' ' : FRANCAIS\r\n'1' : FRANCAIS\r\n'2' : ANGLAIS\r\n'3' : ESPAGNOL\r\n'4' : ALLEMAND\r\n'5' : DANOIS\r\n'6' : GREC\r\n'7' : ITALIEN\r\n'8' : NEERLANDAIS\r\n'9' : PORTUGAIS"
+        enum:
+          - ' '
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+      interest_payment_cash_account:
+        type: string
+        description: "numero du DAV de versement des intérêts \r\n\r\n(peut-être different du compte espèces \r\nassocié au contrat)\r\n\r\nSur 11 caractères."
+      specific_cash_account:
+        type: string
+        description: "Numero du compte spécifique DAV\r\n\r\nNuméro de compte D.A.V sur 11 caractères, rattaché au\r\ncompte titres, support de l'opération.\r\nSur autorisation, peut être un numéro de D.A.V.\r\ndifférent de celui rattaché au compte support de\r\nl'opération."
+      subscription_cash_account:
+        type: string
+        description: "Numero du DAV de la souscription du DAT\r\n\r\nNuméro de compte D.A.V sur 11 caractères, \r\nrattaché au compte titres, support de l'opération. \r\nSur autorisation, peut être un numéro de D.A.V.\r\ndifférent de celui rattaché au compte support de\r\nl'opération."
+      operation_amount:
+        $ref: '#/definitions/Amount'
+      sequestration_account_data:
+        type: object
+        description: "Cet objet contient les données spécifiques\r\nà un DAT séquestre"
+        properties:
+          retrocession_type_code:
+            type: string
+            description: "Code type de rétrocession.\r\n\r\nPermet de connaitre le type de rétrocession.\r\n\r\n'1' : NOTAIRE\r\n'2' : AGENT IMMOBILIER\r\n'3' : AVOCAT"
+            enum:
+              - '1'
+              - '2'
+              - '3'
+              - ' '
+          notary_retrocession_rate:
+            type: number
+            description: Taux de retrocession au notaire.
+          retrocession_cash_account:
+            type: string
+            description: "Numero de dav de retrocession.\r\n\r\nNuméro de compte Depôt A Vue de\r\nl'apporteur d'affaire servant au\r\nversement de la rétrocession.\r\n\r\nSur 11 caractères."
+      scheduling_data:
+        type: object
+        description: "Cet objet contient les données relatives à \r\nl'échéancier du DAT (si il y en a un)"
+        properties:
+          first_scheduled_date:
+            type: string
+            format: date
+            description: Date du premier versement ou retrait défini lors de la souscription
+          first_scheduled_amount:
+            $ref: '#/definitions/Amount'
+    x-stoplight:
+      id: ebqjn13y26pxn
+  DATSubscriptionOverview:
+    title: DATSubscriptionOverview
+    type: object
+    description: 'L''objet DATSubscriptionOverview correspond à l''état d''un DAT souscrit, une vision à J du contrat DAT souscrit, contenant l''encours, la somme des versements ou des remboursements.'
+    required:
+      - UOM_code
+      - contract_id
+      - taxation_type_code
+    properties:
+      id:
+        type: string
+        description: "Identifiant unique de la souscription (NUDEB).\r\n\r\nSur 12 caractères."
+      UOM_code:
+        type: string
+        description: "Code adhérent sur 5 caractères\r\n"
+      contract_id:
+        type: string
+        description: "identifiant contrat sur 11 caractères\r\n"
+      status:
+        type: string
+        description: "Statut du DAT\r\n\r\nValeurs possibles :\r\n'DAT OUVERT' = 1\r\n'DAT REMBOURSE' = 2\r\n'ECHU NON REMBOURSE' = 3\r\n'DAT EN COURS DE REGULARISATION' = 4\r\n'DAT ANNULE' = 5\r\n'DAT TRANFERE' = 6\r\n'DAT EN COURS DE SOUSCRIPTION' = 7\r\n'DAT EN COURS DE SIMULATION' = 8 ?\r\n'DAT EN COURS DE SIMULATION ANNULEE' = '9' ?\r\n\r\n"
+        enum:
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - ' '
+      application_date_of_changed_reference_conditions:
+        type: string
+        description: date à laquelle s'appliquent des modifications de conditions référentielles
+        format: date
+      expiration_date_copy:
+        type: string
+        description: date d'échéance du DAT
+        format: date
+      taxation_type_code:
+        type: string
+        description: "code type de fiscalité\r\n\r\n'N' : NETTE\r\n'B' : BRUTE\r\n'A' : ANONYME\r\n'C' : FISCALITE DU CLIENT"
+        enum:
+          - B
+          - 'N'
+          - A
+          - C
+          - ' '
+      taxation_system:
+        type: string
+        description: "Régime fiscal\r\n‘BRUT’\r\n‘NET ’\r\n‘PFU ’ : Prélèvement forfaitaire unitaire\r\n‘IRPP’ : impôt sur le revenu\r\n‘IS  ’ : impôt sur les sociétés\r\n‘ANON’ : Anonyme\r\n"
+        enum:
+          - BRUT
+          - 'NET '
+          - 'PFU '
+          - IRPP
+          - 'IS  '
+          - ANOM
+          - ' '
+      gross_return_actuarial_rate:
+        type: number
+        description: "TRAAB (taux de rendement annuel actuariel brut) \r\nde la souscription"
+      actuarial_rate_in_force:
+        type: number
+        description: taux palier en cours
+      capital_amounts_data:
+        type: object
+        description: "Objet contenant différents montants relatifs\r\nau montant de capital du DAT"
+        required:
+          - outstanding
+        properties:
+          outstanding:
+            $ref: '#/definitions/Amount'
+          nominal_subscription_amount:
+            $ref: '#/definitions/Amount'
+          sum_of_payments:
+            $ref: '#/definitions/Amount'
+          sum_of_reimbursements_of_capital:
+            $ref: '#/definitions/Amount'
+          sum_of_gross_interest_already_paid:
+            $ref: '#/definitions/Amount'
+          sum_of_net_interest_already_paid:
+            $ref: '#/definitions/Amount'
+    x-stoplight:
+      id: 99t7rn7c8j1bs
+  DATSubscriptionDetails:
+    title: DATSubscriptionDetails
+    type: object
+    description: 'L''objet DATSubscriptionDetails correspond à une vision détaillée, voire historique de la vie du contrat DAT souscrit, contenant l''ensemble des versements d''intérêts, de prélèvement sociaux ou fiscaux, les informations sur les primes de rembousements, ...'
+    required:
+      - entry_origin_code
+      - entry_date
+      - entry_hour
+    properties:
+      id:
+        type: string
+        description: "Identifiant unique de la souscription (NUDEB).\r\n\r\nSur 12 caractères."
+      entry_origin_code:
+        type: string
+        description: "Code sur 3 caractères indiquant \r\nl'origine de la saisie de l'opération.\r\n\r\n'REN' : RENOUVELLEMENT\r\n'VDT' : VIDEOTITRES\r\n\r\n"
+        enum:
+          - REN
+          - VDT
+          - ' '
+      entry_date:
+        type: string
+        format: date
+        description: date de saisie du DAT
+      entry_hour:
+        type: string
+        format: time
+        description: Heure de saise du DAT
+      entry_user:
+        type: string
+        description: "Identifiant de l'utilisateur de saisie du DAT\r\nsur 15 cararactères."
+      last_update_date:
+        type: string
+        format: date
+        description: date de dernière mise à jour du DAT
+      expiry_notice_creation_indicator:
+        type: string
+        description: "Donnée permettant d'indiquer qu'il y a eu \r\ndéclenchement de l'envoi de l'avis d'échéance.\r\n\r\n'O' : OUI\r\n'N' : NON"
+        enum:
+          - O
+          - 'N'
+          - ' '
+      basic_rate:
+        type: number
+        description: "taux de base\r\n \r\n Le taux de base est le taux minimal que les\r\n Adhérents peuvent appliquer aux produits D.A.T.\r\n, qu'elles fixent librement, tout en tenant compte\r\n d'un taux de référence publié sur le marché."
+      issuer_margin_rate:
+        type: number
+        description: "taux de marge de l'adhérent\r\n\r\nLa marge est la rémunération que prend \r\nl'adhérent sur le taux de base appliqué \r\naux opérations client."
+      last_interest_payment_date:
+        type: string
+        format: date
+        description: date de dernier paiement d'intérêts
+      next_interest_payment_date:
+        type: string
+        format: date
+        description: date de prochain paiement d'intérêts
+      last_capitalization_date:
+        type: string
+        format: date
+        description: date de dernière capitalisation
+      next_capitalization_date:
+        type: string
+        format: date
+        description: date de prochaine capitalisation
+      interests_label_code:
+        type: string
+        description: "CODE NATURE LIBELLE INTERETS\r\n\r\nF ou B ou E ou C = Montant des intérêts bruts\r\nR = Montant de la rente\r\nP = Montant de la première rente\r\n"
+        enum:
+          - ' '
+          - F
+          - B
+          - R
+          - C
+          - E
+          - P
+      interest_amounts_data:
+        type: object
+        description: "Objet contenant différents montants relatifs\r\naux montants d'intérêts générés par le DAT"
+        properties:
+          sum_of_PFL_tax_on_already_paid_interest:
+            $ref: '#/definitions/Amount'
+          sum_of_social_contributions_on_already_paid_interest:
+            $ref: '#/definitions/Amount'
+          sum_of_ISF_tax_on_already_paid_interest:
+            $ref: '#/definitions/Amount'
+          sum_of_capitalized_net_interest:
+            $ref: '#/definitions/Amount'
+          sum_of_gross_interest_on_capitalization:
+            $ref: '#/definitions/Amount'
+          sum_of_PFL_on_capitalization:
+            $ref: '#/definitions/Amount'
+          sum_of_social_contribution_on_capitalization:
+            $ref: '#/definitions/Amount'
+          withholding_tax_amount:
+            $ref: '#/definitions/Amount'
+          next_gross_interest_payment_amount:
+            $ref: '#/definitions/Amount'
+      premiums_payment_data:
+        type: object
+        description: "Cet objet contient les données relatives\r\naux versements de primes sur le DAT"
+        properties:
+          gross_return_actuarial_rate_including_premiums_payments:
+            type: number
+            description: "TRAAB (Taux de Retour Actuariel Brut) en \r\nincluant les primes"
+          next_premium_payment_date:
+            type: string
+            format: date
+            description: date de prochain paiement de prime
+          last_premium_acquisition_notice_date:
+            type: string
+            format: date
+            description: date de dernier avis d'acquisition de prime
+      scheduling_service_data:
+        type: object
+        description: données necessaires à l'échéancier
+        properties:
+          service_number:
+            type: number
+            description: Numéro de service de l'échéancier
+          service_state:
+            type: string
+            description: "Etat du service\r\n\r\n'A' : Actif\r\n'C' : Clos\r\n'S' : Supprimé"
+            enum:
+              - A
+              - C
+              - S
+              - ' '
+          service_closure_date:
+            type: string
+            format: date
+            description: Date de clôture du service
+          scheduling_ending_date:
+            type: string
+            description: date fin de l'échéancier
+            format: date
+          scheduling_recess_begining_date:
+            type: string
+            format: date
+            description: date de début de suspension de l'échéancier
+          next_scheduled_payment_effective_date:
+            type: string
+            format: date
+            description: Date d'effet du prochain versement programmé.
+          next_scheduled_payment_amount:
+            $ref: '#/definitions/Amount'
+          next_scheduled_reimbursement_effective_date:
+            type: string
+            description: date d'effet du prochain retrait programmé
+            format: date
+          next_scheduled_reimbursement_amount:
+            $ref: '#/definitions/Amount'
+          number_of_past_recesses:
+            type: integer
+            description: Nombre de suspensions passees au sein de l'échéancier
+          number_of_remaining_recesses:
+            type: integer
+            description: Nombre de suspensions à venir au sein de l'échéancier
+          number_of_recessed_operations_in_current_suspension:
+            type: integer
+            description: "Nombre d'échéances suspendues dans la \r\nsuspension en cours"
+          scheduling_status:
+            type: string
+            description: "Indique l'état de l'échéancier\r\n\r\n'A' : Actif\r\n'S' : Suspendu\r\n'F' : Fermé\r\n\r\n"
+            enum:
+              - A
+              - S
+              - F
+              - ' '
+          scheduling_operation_type:
+            type: string
+            description: "Sens de l'échéancier\r\n\r\nCet indicateur permet de savoir si \r\nl'échéancier doit déclencher \r\nune souscription ou un rachat.\r\n\r\n'S' : Souscription\r\n'R' : Retrait"
+            enum:
+              - S
+              - R
+              - ' '
+          scheduling_payment_frequency:
+            type: string
+            description: "Périodicité des versements programmés.\r\n\r\n'M' : MENSUELLE\r\n'T' : TRIMESTRIELLE\r\n'S' : SEMESTRIELLE\r\n'A' : ANNUELLE"
+            enum:
+              - M
+              - T
+              - S
+              - A
+              - ' '
+          scheduled_reimbursements_frequency:
+            type: string
+            description: "Périodicité des retraits programmés.\r\n\r\n'M' : MENSUELLE\r\n'T' : TRIMESTRIELLE\r\n'S' : SEMESTRIELLE\r\n'A' : ANNUELLE"
+            enum:
+              - M
+              - T
+              - S
+              - A
+              - ' '
+          recess_possibility_indicator:
+            type: string
+            description: "Indicateur possibilité de suspension de \r\nl'échéancier.\r\n\r\n'O' : Oui\r\n'N' : Non\r\n"
+            enum:
+              - O
+              - 'N'
+              - ' '
+      renewal_data:
+        type: object
+        properties:
+          renewal_number:
+            type: integer
+            description: '"Nombre de renouvellements déjà effectués sur\r\nce DAT"'
+          first_subscription_date:
+            type: string
+            format: date
+            description: date de première émission du DAT
+          operation_type:
+            type: string
+            description: "\"Code type d'opération complémentaire au renouvellement (versement, retrait, ou rien) Indique si le renouvellement est accompagné d'un retrait, d'un versement ou non.\r\n'V' : VERSEMENT\r\n'R' : retrait\r\n' ' : RENOUVELLEMENT SANS OPERATION COMPLEMENTAIRE\""
+            enum:
+              - V
+              - R
+              - ' '
+          subscription_renewal_mode:
+            type: string
+            enum:
+              - '0'
+              - '1'
+              - '2'
+              - '4'
+              - ' '
+            description: "\"code type de renouvellement saisie à la souscription\r\nIndique le type de renouvellement à effectuer à l'échéance du DAT\r\n'0' : PAS DE RENOUVELLEMENT\r\n'1' : RENOUVELLEMENT DU CAPITAL\r\n'2' : RENOUVELLEMENT DU CAPITAL PLUS LES INTERETS\r\n'4' : RENOUVELLEMENT DU CAPITAL PLUS LES INTERETS DANS LEUR INTEGRALITE (AVEC DECIMALES)\""
+      penalty_mode:
+        type: string
+        description: "Indicateur si la pénalité se fait en date \r\nde souscription ou de remboursement.\r\n\r\n'S' : SOUSCRIPTION\r\n'R' : REMBOURSEMENT"
+        enum:
+          - S
+          - R
+          - ' '
+    x-stoplight:
+      id: dbpbxc1pjb5lm
+  DATProductSearchResult:
+    title: DATProductSearchResult
+    type: object
+    description: Cet objet permet la vue d'un résultat de recherche de produits DAT
+    required:
+      - code
+    properties:
+      code:
+        type: string
+        description: "code produit du DAT\r\n\r\nSur 6 caractères."
+      label:
+        type: string
+        description: "libellé long du produit\r\n\r\nSur 32 caractères."
+      rate_type:
+        type: string
+        description: "code type de taux \r\n\r\n'F' : fixe\r\n'P' : progressif\r\n'V' : variable\r\n' ' : non renseigné"
+        enum:
+          - F
+          - P
+          - V
+          - ' '
+      rate_change_frequency:
+        type: string
+        description: "periodicite de variation de taux\r\n\r\nCette donnée indique la périodicité de la variation\r\ndes taux d'un produit.\r\nElle peut prendre les valeurs suivantes :\r\n\r\n'M' : MENSUELLE\r\n'T' : TRIMESTRIELLE\r\n'S' : SEMESTRIELLE\r\n'A' : ANNUELLE"
+        enum:
+          - M
+          - T
+          - S
+          - A
+          - ' '
+      interest_payment_frequency:
+        type: string
+        description: "code périodicité des intérêts\r\n\r\n'M' : MENSUELLE\r\n'T' : TRIMESTRIELLE\r\n'S' : SEMESTRIELLE\r\n'A' : ANNUELLE\r\n'P' : PRE-COMPTES\r\n'F' : POST-COMPTES\r\n'R' : ROMPU\r\n'C' : CAPITALISES"
+        enum:
+          - M
+          - T
+          - S
+          - A
+          - P
+          - F
+          - R
+          - C
+          - ' '
+      duration:
+        type: object
+        description: "données relatives à la durée du produit\r\n"
+        properties:
+          unit:
+            type: string
+            description: "unite de la duree de vie du produit\r\n\r\n'J' : JOUR\r\n'M' : MOIS"
+            enum:
+              - J
+              - M
+              - ' '
+          type:
+            type: string
+            enum:
+              - ' '
+              - F
+              - I
+            description: "Type de la durée du produit : \r\n'F' : FIXE\r\n'I' : INTERMEDIAIRE"
+          value_minimum_months:
+            type: number
+            description: "durée de vie du produit \r\n(voir le champ product_duration_unit pour \r\navoir l'unité de cette quantité)"
+          value_minimum_days:
+            type: number
+            description: "durée de vie du produit \r\n(voir le champ product_duration_unit pour \r\navoir l'unité de cette quantité)"
+          value_maximum_months:
+            type: number
+            description: "durée de vie du produit \r\n(voir le champ product_duration_unit pour \r\navoir l'unité de cette quantité)"
+          value_maximum_days:
+            type: number
+            description: "durée de vie du produit \r\n(voir le champ product_duration_unit pour \r\navoir l'unité de cette quantité)"
+      starting_date:
+        type: string
+        description: "date de début de validité du produit\r\n"
+        format: date
+      expiry_date:
+        type: string
+        description: "date de fin de validité du produit\r\n"
+        format: date
+      presence_schedule_indicator:
+        description: "indicateur présence échéancier\r\nO OUI\r\nN NON\r\n"
+        type: string
+        enum:
+          - ' '
+          - O
+          - 'N'
+      target_market_data:
+        type: array
+        description: "tableau de 15 occurrences maximum restituant \r\nles codes cibles de commercialisation d'un produit d'épargne \r\n\r\ntous les codes marchés associés au produit (pas de notion TOUS MARCHES dans SI-TCC)"
+        items:
+          type: object
+          properties:
+            code:
+              type: string
+              description: "Code cible de commercialisation d'un produit d'épargne (sur 2 caractères)\r\n "
+            label:
+              type: string
+              description: "Libellé du code cible de commercialisation d'un produit d'épargne\r\n "
+    x-stoplight:
+      id: 26hy3rdm1rxp2
+  DATProduct:
+    title: DATProduct
+    type: object
+    description: L'objet DATProduct correspond au produit DAT et à ses caractéristiques de commercialisation.
+    x-stoplight:
+      id: 3qwyg226x0yy3
+    required:
+      - issuer
+      - code
+      - label
+      - family_id
+      - interest_payment_frequency
+      - rate_type
+      - rate_nature
+    properties:
+      issuer:
+        type: string
+        description: "Adherent emetteur du DAT\r\n\r\nSur 3 caractères."
+      code:
+        type: string
+        description: "code produit du DAT\r\n\r\nSur 6 caractères."
+      label:
+        type: string
+        description: "libellé long du produit\r\n\r\nSur 32 caractères."
+      family_id:
+        type: string
+        description: "identifiant de la famille du produit\r\n\r\nSur 4 caractères"
+      familly_label:
+        type: string
+        description: "libellé de la famille de produit\r\n\r\nSur 20 caractères"
+      interest_payment_frequency:
+        type: string
+        description: "code périodicité des intérêts\r\n\r\n'M' : MENSUELLE\r\n'T' : TRIMESTRIELLE\r\n'S' : SEMESTRIELLE\r\n'A' : ANNUELLE\r\n'P' : PRE-COMPTES\r\n'F' : POST-COMPTES\r\n'R' : ROMPU\r\n'C' : CAPITALISES"
+        enum:
+          - M
+          - T
+          - S
+          - A
+          - P
+          - F
+          - R
+          - C
+          - ' '
+      rate_type:
+        type: string
+        description: "code type de taux \r\n\r\n'F' : fixe\r\n'P' : progressif\r\n'V' : variable\r\n' ' : non renseigné"
+        enum:
+          - F
+          - P
+          - V
+          - ' '
+      rate_nature:
+        type: string
+        description: "code nature de taux \r\n\r\n'A' : actuariel\r\n'N' : nominal\r\n' ' : mixte"
+        enum:
+          - ' '
+          - A
+          - 'N'
+      duration:
+        type: object
+        required:
+          - unit
+        properties:
+          unit:
+            type: string
+            description: "unite de la duree de vie du produit\r\n\r\n'J' : JOUR\r\n'M' : MOIS"
+            enum:
+              - J
+              - M
+              - ' '
+          value_minimum_months:
+            type: number
+            description: "durée de vie du produit \r\n(voir le champ product_duration_unit pour \r\navoir l'unité de cette quantité)"
+          value_minimum_days:
+            type: number
+            description: "durée de vie du produit \r\n(voir le champ product_duration_unit pour \r\navoir l'unité de cette quantité)"
+          value_maximum_months:
+            type: number
+            description: "durée de vie du produit \r\n(voir le champ product_duration_unit pour \r\navoir l'unité de cette quantité)"
+          value_maximum_days:
+            type: number
+            description: "durée de vie du produit \r\n(voir le champ product_duration_unit pour \r\navoir l'unité de cette quantité)"
+          type:
+            type: string
+            enum:
+              - ' '
+              - F
+              - I
+            description: "Type de la durée du produit : \r\n'F' : FIXE\r\n'I' : INTERMEDIAIRE"
+          multiple_of_duration:
+            description: "multiple de durée\r\n"
+            type: number
+      reimbursement_notice_duration_in_days:
+        type: integer
+        description: "nombre de jours de préavis (lors d'un \r\nremboursement anticipé autorisé)\r\n"
+      rate_change_frequency:
+        type: string
+        description: "periodicite de variation de taux\r\n\r\nCette donnée indique la périodicité de la variation\r\ndes taux d'un produit.\r\nElle peut prendre les valeurs suivantes :\r\n\r\n'M' : MENSUELLE\r\n'T' : TRIMESTRIELLE\r\n'S' : SEMESTRIELLE\r\n'A' : ANNUELLE"
+        enum:
+          - M
+          - T
+          - S
+          - A
+          - ' '
+      premiums_payments_number:
+        type: integer
+        description: "Nombre de primes pour le code produit du DAT.\r\n\r\nIndique le nombre de primes qu'un DAT doit\r\nnormalement recevoir pour le code produit traité"
+      scheduled_parameters:
+        type: object
+        description: données échancier relatives au produit
+        properties:
+          scheduling_service_reference:
+            type: string
+            description: Réference de l'échéancier sur 8 caractères
+          scheduling_type:
+            type: string
+            description: "code indiquant le type d'échancier pour la date et montant programmé : \r\nV Versement\r\nR retrait"
+            enum:
+              - V
+              - P
+              - ' '
+          scheduling_payment_frequency:
+            type: string
+            description: "Périodicité des versements programmés.\r\n\r\n'M' : MENSUELLE\r\n'T' : TRIMESTRIELLE\r\n'S' : SEMESTRIELLE\r\n'A' : ANNUELLE"
+            enum:
+              - M
+              - T
+              - S
+              - A
+              - ' '
+          scheduled_reimbursement_mode:
+            type: string
+            description: "Indicateur du mode de retrait de l'echeancier\r\n\r\n'0' : RETRAIT EN CAPITAL RETIRE (CAPITAL SEUL)\r\n'1' : RETRAIT EN MONTANT NET (CAPITAL + INTERETS NETS)"
+            enum:
+              - '0'
+              - '1'
+              - ' '
+          amount_modification_possibility_indicator:
+            type: string
+            description: "Indicateur de possibilité de modification \r\ndu montant de l'opération de l'échéancier.\r\n\r\n'O' : Oui\r\n'N' : Non"
+            enum:
+              - O
+              - 'N'
+              - ' '
+          date_modification_possibility_indicator:
+            type: string
+            description: "Indicateur de possibilité de modification du\r\njour de l'opération de l'échéancier.\r\n\r\n'O' : Oui\r\n'N' : Non"
+            enum:
+              - O
+              - 'N'
+              - ' '
+          number_of_consecutive_interruptions:
+            type: integer
+            description: "nombre d'interruptions consécutives possibles\r\n\r\n"
+          max_number_of_consecutive_interruptions:
+            type: integer
+            description: "nombre d'interruptions maxi\r\n"
+          maximum_number_of_days_of_deferred_subscription:
+            type: integer
+            description: "nombre de jours maxi différés de souscription\r\n\r\n"
+          minimum_number_of_days_of_deferred_subscription:
+            type: integer
+            description: "nombre de jours mini différés de souscription\r\n\r\n"
+          schedulded_payment_indicator:
+            type: string
+            description: "indicateur versement programmé\r\n\r\nprécise si l'offre épargne autorise les versements programmés\r\n'O' : Oui\r\n'N' : Non\"\r\n"
+            enum:
+              - ' '
+              - O
+              - 'N'
+          synchronization_of_schedulded_payment_frequency:
+            type: string
+            description: "top synchronisation périodicité versement programmé\r\n\r\n\r\nO : LE DATE DE VERSEMENT EST CALE SUR LA DATE D'EMISSION DE LA LIGNE\r\nN : LA DATE DE VERSEMENET ESY AU CHOIX DU CLIENT A LA SOUSCRITPIOTN \"\r\n"
+            enum:
+              - ' '
+              - O
+              - 'N'
+          schedulded_reimbursement_indicator:
+            type: string
+            description: "indicateur retrait programmé\r\n\r\nPrécise si l'offre epargne autorise les retraits programmés\r\n\r\n'O' : Oui\r\n'N' : Non\"\r\n"
+            enum:
+              - ' '
+              - O
+              - 'N'
+          stop_of_schedulded_reimbursement_or_payment_if_death_indicator:
+            type: string
+            description: "indicateur arrêt versement/retrait programmé si décès\r\n\r\nindique si les versements/ retraits programmés sont stoppés en cas de décès\r\n\r\n\r\n'O' : Oui\r\n'N' : Non\"\r\n"
+            enum:
+              - ' '
+              - O
+              - 'N'
+          annual_payment_ceiling_amount:
+            $ref: '#/definitions/Amount'
+          cutoff_of_schedulded_payments_amount:
+            $ref: '#/definitions/Amount'
+          minimum_schedulded_payment_amount:
+            $ref: '#/definitions/Amount'
+          maximum_schedulded_payment_amount:
+            $ref: '#/definitions/Amount'
+          multiple_subscription_scheduled_reimbursement:
+            $ref: '#/definitions/Amount'
+          scheduled_reimbursement_amount:
+            $ref: '#/definitions/Amount'
+      renewal_parameters:
+        type: object
+        properties:
+          renewal_mode:
+            type: string
+            enum:
+              - '0'
+              - '1'
+              - '2'
+              - '3'
+              - '4'
+              - ' '
+            description: "\"code type de renouvellement\r\nIndique le type de renouvellement à effectuer à l'échéance du DAT\r\n'0' : PAS DE RENOUVELLEMENT\r\n'1' : RENOUVELLEMENT DU CAPITAL\r\n'2' : RENOUVELLEMENT DU CAPITAL PLUS LES INTERETS\r\n'3' : TYPE DE RENOUVELLEMENT CHOISI A LA SOUS. (VALEUR LIEE A LA TABLE PRODUIT)\r\n'4' : RENOUVELLEMENT DU CAPITAL PLUS LES INTERETS DANS LEUR INTEGRALITE (AVEC DECIMALES)\""
+          renewal_code:
+            type: string
+            enum:
+              - O
+              - 'N'
+              - ' '
+            description: "code de renouvellement\r\n\r\n'O' : Oui\r\n'N' : Non\"\r\n\r\n"
+          number_of_possible_renewals:
+            type: integer
+            description: "nombre de renouvellements possibles\r\n"
+          renewal_margin_indicator:
+            type: string
+            description: "code marge renouvellement\r\n\r\n'O' : Oui\r\n'N' : Non\"\r\n"
+            enum:
+              - ' '
+              - O
+              - 'N'
+          amendment_to_renewal_indicator:
+            type: string
+            description: "indicateur avenant renouvellement\r\n\r\nO VERSEMENET OU RETRAIT POSSIBLE AU RENOUVELLEMENT\r\nN VERSEMENT OU ETRAIT NTERDIT AU RENOUVELLEMENT\r\nV VERSEMENT POSSIBLE AU RENOUVELLEMENT\r\nR RETRAIT POSSIBLE AU RENOUVELLEMENT\"\r\n"
+            enum:
+              - ' '
+              - O
+              - 'N'
+              - V
+              - R
+          renewal_of_the_premium_conditions:
+            type: string
+            description: "reconduction condition acquisition de la prime\r\n\r\n\r\n'O' : Oui les CONDITIONS DES PRIMES VONT ETRE RECONDUITES AU RENOUVELLEMENET\r\n'N' : Non CONDITION SE FAIT SUR LE 1ER DAT\"\r\n\r\n"
+            enum:
+              - ' '
+              - O
+              - 'N'
+      management_amounts_data:
+        type: object
+        description: données relatives à la gestion des montants d'un produit DAT
+        properties:
+          subscription_cutoff_amount:
+            $ref: '#/definitions/Amount'
+          reimbursement_cutoff_amount_:
+            $ref: '#/definitions/Amount'
+          minimum_subscription_amount:
+            $ref: '#/definitions/Amount'
+          maximum_subscription_amount:
+            $ref: '#/definitions/Amount'
+          minimum_reimbursement_amount:
+            $ref: '#/definitions/Amount'
+          minimum_paid_upon_renewal_amount:
+            $ref: '#/definitions/Amount'
+          minimum_amount_after_outstanding:
+            $ref: '#/definitions/Amount'
+      formula_calculation:
+        type: integer
+        description: "Code de formule de calcul.\r\nce champ permet d'identifier la formule utilisée pour les calculs d'interêt sur les DAT indexés. \r\nCe type d'indexation détermine le taux sur lequel le produit est indexé\r\n"
+      starting_date:
+        type: string
+        description: "date de début de validité du produit\r\n"
+        format: date
+      expiry_date:
+        type: string
+        description: "date de fin de validité du produit\r\n"
+        format: date
+      presence_schedule_indicator:
+        type: string
+        description: "indicateur présence échéancier\r\nO oui\r\nN non\r\n\r\n"
+        enum:
+          - ' '
+          - O
+          - 'N'
+      total_reimbursement_code:
+        type: string
+        description: "Ce code indique si le remboursement total du capital d'un produit est autorisé en fonction de l'utilisateur :\r\n'1' AUTORISE CT\r\n'2' AUTORISE CT ET CR\r\n'3' AUTORISE A TOUS"
+        enum:
+          - '1'
+          - '2'
+          - '3'
+          - ' '
+      partial_reimbursement_code:
+        type: string
+        description: "Ce code indique si le remboursement partiel du capital d'un produit est possible ou pas :\r\n'O' OUI\r\n'N' NON\r\n"
+        enum:
+          - O
+          - 'N'
+          - ' '
+      target_market_data:
+        type: array
+        description: "tableau de 15 occurrences maximum restituant \r\nles codes cibles de commercialisation d'un produit d'épargnles \r\n\r\ntous les codes marchés associés au produit (pas de notion TOUS MARCHES dans SI-TCC)"
+        items:
+          type: object
+          properties:
+            code:
+              type: string
+              description: "Code cible de commercialisation d'un produit d'épargne (sur 2 caractères)\r\n "
+            label:
+              type: string
+              description: "Libellé du code cible de commercialisation d'un produit d'épargne\r\n "
+      maximum_payments:
+        $ref: '#/definitions/Amount'
+      oustanding_floor_in_percentage:
+        type: number
+        description: "encours plancher en pourcentage\r\n"
+      rate_increase_code:
+        type: string
+        description: "permet d'appliquer ou non une majoration de taux \r\n\r\n\r\n'O' OUI\r\n'N' NON\r\n"
+        enum:
+          - O
+          - 'N'
+          - ' '
+      reimbursement_mode_indicator:
+        type: string
+        description: "precise le mode de retrait\r\n\r\n0 RETRAIT EN CAPITAL RETIRE\r\n1 RETRAIT EN MONTANT NET\r\n2 AU CHOIX AU MOMENT DU REMBOURSEMENTS POUR LES RETRAITE LIBRES ET AU MOMENT DE LA SOUSCRIPTION S;IL Y A DES RETRAITS PROGRAMMES\"\r\n\r\n"
+        enum:
+          - 0
+          - 1
+          - 2
+          - ' '
+      sequestration_indicator:
+        type: string
+        description: "indicateur produit sequestre\r\n\r\n\r\n'O' OUI sequestre\r\n'N' NON\r\n"
+        enum:
+          - O
+          - 'N'
+          - ' '
+      authorizations_parameters:
+        type: object
+        description: habilitations liées au produit
+        properties:
+          agency_subscription_authorization:
+            type: string
+            enum:
+              - ' '
+              - O
+              - 'N'
+            description: "habilitation souscription agence\r\n\r\n\r\n'O' : AUTORISE AGENCE\r\n'N' : INTERDIT AGENCE\"\r\n"
+          group_subscription_authorization:
+            type: string
+            enum:
+              - ' '
+              - O
+              - 'N'
+            description: "habilitation souscription groupe\r\n\r\n'O' : AUTORISE AUX GROUPES\r\n'N' : INTERDIT AUX GROUPES\"\r\n\r\n"
+          roaming_subscription_authorization:
+            type: string
+            enum:
+              - ' '
+              - O
+              - 'N'
+            description: "habilitation souscription itinerant\r\n\r\n'O' : AUTORISE AUX ITINERANTS\r\n'N' : INTERDIT AUX ITINERANTS\"\r\n\r\n"
+          agency_reimbursement_authorization:
+            type: string
+            enum:
+              - ' '
+              - O
+              - 'N'
+            description: "habilitation remboursement agence\r\n\r\n\r\n'O' : REMBOURSEMENT AGENCE AUTORISE\r\nN: REMBOURSEMENT AGENCE INTERDIT\"\r\n\r\n"
+          group_reimbursement_authorization:
+            type: string
+            enum:
+              - ' '
+              - O
+              - 'N'
+            description: "habilitation remboursement groupe\r\n\r\n\r\n'O' : REMBOURSEMENT GROUPE AUTORISE\r\nN: REMBOURSEMENT GROUPE INTERDIT\"\r\n"
+          roaming_reimbursement_authorization:
+            type: string
+            enum:
+              - ' '
+              - O
+              - 'N'
+            description: "habilitation remboursement itinérant\r\n\r\n\r\n'O' : REMBOURSEMENT ITINERANT AUTORISE\r\nN: REMBOURSEMENT ITINERANT INTERDIT\"\r\n"
+      slip_display_parameters:
+        type: object
+        description: "données relatives à l'affichages dans les bordereaux\r\n"
+        properties:
+          informative_label_for_slip_1:
+            description: "libellé informatif pour les bordereaux - ligne 1\r\n\r\n"
+            type: string
+          informative_label_for_slip_2:
+            description: "libellé informatif pour les bordereaux - ligne 2\r\n\r\n"
+            type: string
+          nominal_rate_display_for_slip:
+            type: string
+            enum:
+              - ' '
+              - O
+              - 'N'
+            description: "affichage taux nominal\r\n\r\nO : OUI\r\nN : NON\"\r\n"
+          actuarial_rate_display_for_slip:
+            type: string
+            enum:
+              - ' '
+              - O
+              - 'N'
+            description: "affichage taux actuariel\r\n\r\nO : OUI\r\nN : NON\"\r\n"
+          gross_return_actuarial_rate_display_for_slip:
+            type: string
+            enum:
+              - ' '
+              - O
+              - 'N'
+            description: "affichage taux TRAAB\r\n\r\nO : OUI\r\nN : NON\"\r\n"
+          penalty_display_for_slip:
+            type: string
+            enum:
+              - ' '
+              - O
+              - 'N'
+            description: "affichage penalités\r\n\r\nO : OUI\r\nN : NON\"\r\n"
+          flat_rate_display_for_slip:
+            type: string
+            enum:
+              - ' '
+              - O
+              - 'N'
+            description: "affichage taux paliers\r\n\r\nO : OUI\r\nN : NON\"\r\n"
+          planned_annuities_display_for_slip:
+            type: string
+            enum:
+              - ' '
+              - O
+              - 'N'
+            description: "affichage distribution d'intérêt\r\n\r\nO : OUI\r\nN : NON\"\r\n"
+          paid_interest_display_for_slip:
+            type: string
+            enum:
+              - ' '
+              - O
+              - 'N'
+            description: "affichage interets versés\r\n\r\nO : OUI\r\nN : NON\"\r\n"
+          premiums_display_for_slip:
+            type: string
+            enum:
+              - ' '
+              - O
+              - 'N'
+            description: "affichage primes\r\n\r\nO : OUI\r\nN : NON\"\r\n"
+          fallback_clause_display_for_slip:
+            type: string
+            enum:
+              - '   '
+              - EST
+              - EUR
+            description: "Affichage clause fall back\r\n\r\nEST      ESTR      \r\nEUR      EURIBOR \r\n\r\n"
+  DATPremiums:
+    title: DATPremiums
+    type: object
+    properties:
+      id:
+        type: string
+        description: "Numéro séquentiel identifiant prime\r\n"
+      type:
+        type: string
+        description: "type de prime\r\n\r\nT : TAUX COMPLEMENTAIRE\r\nK : POURCENTAGE DU CAPITAL\r\nM : MONTANT FIXE\"\r\n"
+        enum:
+          - ' '
+          - T
+          - K
+          - M
+      calculation_base:
+        type: string
+        description: "base de calcul prime\r\n\r\n1 : DU DEBUT DE CALCUL\r\n2 : DE LA FIN DU CALCUL\"\r\n"
+        enum:
+          - ' '
+          - '1'
+          - '2'
+      starting_of_calculation_in_months:
+        type: number
+        description: "durée en mois début calcul\r\n"
+      start_date_of_premiums_calculation:
+        type: string
+        format: date
+        description: "date de début calcul des primes\r\n\r\n"
+      ending_calculation_in_months:
+        type: number
+        description: "durée en mois fin calcul\r\n"
+      end_date_of_premiums_calculation:
+        type: string
+        format: date
+        description: "date de fin calcul des primes\r\n\r\n"
+      minimum_acquisition_in_months:
+        type: number
+        description: "durée d'acquisition mini en mois\r\n"
+      premiums_acquisition_date:
+        type: string
+        format: date
+        description: "date acquisition des primes\r\n"
+      date_of_next_premium_payment:
+        type: string
+        format: date
+        description: "date de prochain paiement de prime\r\n"
+      premium_notice_indicator:
+        type: string
+        description: "indicateur avis d'acquisition de la prime\r\n\r\nO : CONST D'UN AVIS D'ACQ DE LA PRIME\r\nN : PAS D'AVIS\"\r\n"
+        enum:
+          - ' '
+          - O
+          - 'N'
+      premium_acquisition_when_anticipated_reimbursement_indicator:
+        type: string
+        description: "indicateur acquisition de la prime si présence de RA avant la date d'acquisition\r\n\r\n\r\nO : ACQ DE LA PRIME MEME SI RA PRECEDENTS\r\nN : PRIME PERDUE SI RA PRECEDANT SON ACQUISITION\r\n\"\r\n"
+        enum:
+          - ' '
+          - O
+          - 'N'
+      maximum_percentage_of_invested_capital_withdrawned:
+        type: number
+        description: "pourcentage maxi de capi invest qui peut être retiré\r\n"
+      premium_acquisition_depending_on_amount_indicator:
+        type: string
+        description: "indicateur d'acquisition de la prime selon montant de l'assiette de calcul au moment de l'acquisition des la prime\r\n\r\nO : ACQ SI MONTANT COMPRIS DANS LA FOURCHETTE DE MONTANT\r\nN : ACQ QUELQUE SOIT LE MONTANT\"\r\n"
+        enum:
+          - ' '
+          - O
+          - 'N'
+      base_minimum_amount:
+        $ref: '#/definitions/Amount'
+      base_maximum_amount:
+        $ref: '#/definitions/Amount'
+      premium_acquisition_if_renewal_indicator:
+        type: string
+        description: "indicateur avis d'acquisition de la prime conitionné par le renouellement\r\n\r\nO : ACQ DE LA PRIME SI CHOIX DE RENOUVELLEMENT DAT\r\nN : ACQ QUELQUE SOIT LE CHOIX DU CLIENT\"\r\n"
+        enum:
+          - ' '
+          - O
+          - 'N'
+      premium_acquisition_when_reimbursement_indicator:
+        type: string
+        description: "indique si la prime est versée lors des différents retraits après acquisition de celle-ci\r\n\r\nO : AU PRORATA DU CAPITAL RETIR\r\nN : PRIME VERSEE UNE SEULE FOIS A LA DATE DE PAIEMENT\"\r\n\r\n"
+        enum:
+          - ' '
+          - O
+          - 'N'
+      payment_method:
+        type: string
+        enum:
+          - ' '
+          - V
+          - T
+        description: "mode de paiement\r\n \r\nV : VERSEMENT SUR DAV\r\nT : VERSERMENT SUR DAT\"\r\n\r\n"
+      duration_before_payment_in_months:
+        type: number
+        description: "durée avant paiement en mois\r\n"
+      premium_values:
+        type: object
+        properties:
+          premium_subscription_date:
+            type: string
+            format: date
+            description: "date de souscription prime\r\n"
+          end_of_premium_subscription_date:
+            type: string
+            description: "date de fin souscription prime\r\n"
+            format: date
+          premium_value:
+            $ref: '#/definitions/Amount'
+          ceiling_premium_amount:
+            $ref: '#/definitions/Amount'
+    description: Primes
+    x-stoplight:
+      id: 6p7wh1zz0s4sh
+  DATPenalties:
+    title: DATPenalties
+    type: object
+    description: pénalités de taux
+    properties:
+      caracteristics_start_date:
+        type: string
+        description: "date de début de validité des caractéristiques des pénalité\r\n"
+        format: date
+      caracteristics_end_date:
+        type: string
+        format: date
+        description: "date de fin de validité des caractéristiques des pénalité\r\n\r\n"
+      penalty_application:
+        type: string
+        description: "permet d'indiquer si on applique ou non une penalité\r\n\r\nO : OUI\r\nN : NON\"\r\n"
+        enum:
+          - ' '
+          - O
+          - 'N'
+      penalty_when_death_indicator:
+        type: string
+        description: "indicateur pénalité suite décès\r\n\r\n\r\nO : OUI\r\nN : NON\"\r\n"
+        enum:
+          - ' '
+          - O
+          - 'N'
+      penalty_expression_mode:
+        type: string
+        description: "mode d'expression penalite\r\n\r\nT : EN TAUX\r\nP : EN % DU TAUX INITIAL\r\nI : APPLICATION DE LA VALEUR D'UN INDICE\"\r\n"
+        enum:
+          - ' '
+          - T
+          - P
+          - I
+      penalty_type_code:
+        type: string
+        description: "code type pénalité\r\n\r\nT : APPLICATION D'UN TAUX PENALITE\r\nM : APPLICATION D'UNE MINORATION\r\nA : APPLICATION D'UNE MAJORATION\r\nC : COMBINé\"\r\n\r\n"
+        enum:
+          - ' '
+          - T
+          - M
+          - A
+          - C
+      nature_code_of_penalty_rate:
+        type: string
+        description: "CODE nature DE TAUX DES PENALITES\r\n\r\n\r\n"
+        enum:
+          - ' '
+          - A
+          - 'N'
+      penalty_label:
+        type: string
+        description: "libelle penalites\r\n\r\n\r\n\r\n\r\n"
+      penalty_type_label:
+        type: string
+        description: "libellé type de pénalité\r\n\r\n\r\n\r\n"
+      penalty_data:
+        type: object
+        description: données liées au créneau de pénalités
+        properties:
+          start_of_penalty:
+            type: string
+            description: "début créneau pénalité\r\n"
+            format: date
+          end_of_penalty:
+            type: string
+            description: "fin créneau pénalité\r\n"
+            format: date
+          penalties_in_accrued_duration:
+            type: array
+            description: "pénalités en durée courue en mois\r\n"
+            items:
+              $ref: '#/definitions/DATRatePenalties'
+          penalties_in_remaining_time_to_run:
+            type: array
+            description: "pénalités en durée restante à courir en mois\r\n"
+            items:
+              $ref: '#/definitions/DATRatePenalties'
+    x-stoplight:
+      id: wikmtfangkzqd
+  DATRatePenalties:
+    title: DATRatePenaltiesArray
+    type: object
+    description: valeur de pénalités de taux
+    properties:
+      minimum_time:
+        type: number
+        description: "durée mini\r\n\r\n"
+      maximum_time:
+        type: number
+        description: durée maxi
+      type_code_of_penalty:
+        type: string
+        description: "code type pénalité\r\n\r\nT : APPLICATION D'UN TAUX PENALITE\r\nM : APPLICATION D'UNE MINORATION\r\nA : APPLICATION D'UNE MAJORATION\r\nC : COMBINé\"\r\n\r\n"
+        enum:
+          - ' '
+          - T
+          - M
+          - A
+          - C
+      penalty_value:
+        type: integer
+        description: "valeur de penalite\r\n\r\n\r\n"
+      penalty_value_sign:
+        description: "signe de la valeur de penalite\r\n\r\n\r\n\r\n\r\n\r\n"
+        type: string
+        enum:
+          - ' '
+          - +
+          - '-'
+    x-stoplight:
+      id: miwqvvad9eu0w
+  DATReviewingData:
+    title: DATReviewingData
+    type: object
+    description: Base de révision
+    x-stoplight:
+      id: 3822h2v87tq08
+    properties:
+      product_reviewing_data:
+        type: object
+        description: base de révision produit
+        properties:
+          reviewing_id:
+            type: string
+            description: "identifiant base revision\r\n\r\n"
+          start_validity_revision_date:
+            type: string
+            description: "date début validité base révision\r\n\r\n"
+            format: date
+          end_validity_revision_date:
+            type: string
+            description: "date fin validité base révision\r\n\r\n"
+            format: date
+          rate_revised_upon_subscription:
+            type: string
+            enum:
+              - ' '
+              - O
+              - 'N'
+            description: "Taux révisé dès la souscription\r\nO OUI DES LA SOUSCRIPTION\r\nN NON"
+          delegation_application_on_revision:
+            type: string
+            description: "Application de la délégation sur révision\r\n\r\nO oui à prendre en compte sur chaque révision\r\nN non\"\r\n"
+            enum:
+              - ' '
+              - O
+              - 'N'
+          rate_review_bonus:
+            type: number
+            description: "bonus taux révision\r\n"
+          rate_review_bonus_sign:
+            description: "signe du bonus du taux révision\r\n+ \r\n-"
+            type: string
+            enum:
+              - ' '
+              - +
+              - '-'
+          bonus_or_malus_presence_indicator:
+            type: string
+            description: "code indicateur présence bonus/malus\r\nN non\"\r\n"
+            enum:
+              - ' '
+              - O
+              - 'N'
+          bonus_applied_upon_subscription:
+            type: string
+            description: "Application du bonus dès la souscription\r\n\r\nO oui dès la souscription\r\nN non\"\r\n"
+            enum:
+              - ' '
+              - O
+              - 'N'
+            x-stoplight:
+              id: o0npews2k5rvg
+          bonus_application_on_reimbursement_indicator:
+            type: string
+            description: "type application bonus remboursement\r\nN non\"\r\n"
+            enum:
+              - ' '
+              - O
+              - 'N'
+          rate_revised_upon_early_reimbursement:
+            type: string
+            enum:
+              - ' '
+              - O
+              - 'N'
+            description: "Taux révisé en remboursement anticipé\r\n"
+          tunnel_ceiling_rate:
+            type: number
+            description: "tunnel plafond\r\n"
+          tunnel_floor_rate:
+            type: number
+            description: "tunnel plancher\r\n"
+          tunnel_expression_type:
+            type: string
+            description: "type expression tunnel\r\n\r\nT : expression du tunnel en taux\r\nV : expression du tunnel en variation de taux\"\r\n"
+            enum:
+              - ' '
+              - T
+              - V
+          snake_ceiling_rate:
+            type: number
+            description: "serpent plafond\r\n"
+          snake_floor_rate:
+            type: number
+            description: "serpent plancher\r\n"
+          trigger_threshold_increase_rate:
+            type: number
+            description: "seuil de déclenchement hausse\r\n"
+          trigger_threshold_decrease_rate:
+            type: number
+            description: "seuil de déclenchement baisse\r\n"
+          boost_indicator:
+            type: string
+            enum:
+              - ' '
+              - O
+              - 'N'
+            description: "indicateur boost\r\nO : OUI\r\nN : NON\"\r\n"
+          boost_revisabled_rate_data:
+            type: object
+            description: "base boost taux révisable\r\n"
+            properties:
+              starting_date:
+                type: string
+                format: date
+                description: "date début validité du boost\r\n"
+              expiry_date:
+                type: string
+                format: date
+                description: "date fin validité du boost\r\n"
+              boost_value:
+                type: number
+                description: "valeur boost\r\n"
+              boost_value_sign:
+                type: string
+                description: "signe du boost\r\n"
+                enum:
+                  - ' '
+                  - +
+                  - '-'
+              boost_type:
+                description: "type de boost\r\n\"M : Mino/Majo\r\nF : Fixe\"\r\n\r\n"
+                type: string
+                enum:
+                  - ' '
+                  - M
+                  - F
+              boost_duration_in_months:
+                type: integer
+                description: "durée du boost en mois\r\n"
+              end_date:
+                type: string
+                format: date
+                description: "date de fin de boost\r\n\r\n"
+              boost_application_on_anticipated_reimbursement:
+                type: string
+                description: "application boost retrait anticipé\r\n"
+              boost_application_on_anticipated_reimbursement_aftewards:
+                type: string
+                description: "application boost retrait anticipé après\r\n"
+      generic_reviewing_data:
+        type: object
+        description: "base révision générique\r\n\r\n"
+        properties:
+          generic_id:
+            type: string
+            description: "identifiant revision generique\r\n"
+          starting_date:
+            type: string
+            description: "date début validité base révision\r\n"
+            format: date
+          expiry_date:
+            type: string
+            description: "date fin validité base révision\r\n\r\n"
+            format: date
+          label:
+            type: string
+            description: "libelle base revision\r\n"
+          type_code:
+            type: string
+            description: "code type de revision\r\nF TAUX FIXE\r\nM : MAJO/MINO\r\n\r\n\r\n"
+            enum:
+              - ' '
+              - F
+              - M
+          application_type_code:
+            type: string
+            description: "code type application revision\r\n\r\nI : immediat\r\nP :  périodique\r\nD :  Dernier taux\r\nC : Calendaire\r\n\r\n"
+            enum:
+              - ' '
+              - I
+              - P
+              - D
+              - C
+          review_frequency:
+            type: string
+            description: "type de périodicité revision\r\n\r\nM : MENSUELLE\r\nT : TIRMESTRIELLE\r\nS : SEMESTRIELLE\r\nA : ANNUELLE\"\r\n\r\n\r\n\r\n"
+            enum:
+              - ' '
+              - M
+              - T
+              - S
+              - A
+          calendar_reference:
+            type: string
+            description: "reference calendaire\r\nsous la forme JJMM\r\n\r\n"
+          reviewing_index_data:
+            type: object
+            description: "index de révision\r\n\r\n"
+            properties:
+              reference_index_code:
+                type: string
+                description: "code indice de reference revision\r\n"
+              reference_index_label:
+                type: string
+                description: "libelle index de revision\r\n\r\n"
+              index_value_data:
+                type: object
+                description: "valeur d'index de révision\r\n\r\n\r\n"
+                properties:
+                  start_validity_date:
+                    type: string
+                    format: date
+                    description: "DATE DEBUT VALIDITE INDEX REVISION\r\n"
+                  start_validity_time:
+                    type: string
+                    format: date
+                    description: "HEURE DEBUT VALIDITE INDEX REVISION\r\n"
+                  index_value:
+                    type: number
+                    description: "valeur de l'index\r\n\r\n"
+  DATAdditionalSimulatedData:
+    title: DATAdditionalSimulatedData
+    type: object
+    description: L'objet DATAdditionalSimulatedData correspond à des données complémentaires simulées dans le cas d'une simulation ou d'une souscription.
+    properties:
+      id:
+        type: string
+        description: "Identifiant unique de la souscription (NUDEB).\r\n\r\nSur 12 caractères."
+      simulation_results_at_due_date:
+        type: object
+        description: résultats de la simulation à l'échéance
+        properties:
+          amount_paid_by_customer:
+            $ref: '#/definitions/Amount'
+          retrocession_amount:
+            $ref: '#/definitions/Amount'
+          sum_of_premiums_data:
+            type: object
+            description: "primes cumulées\r\n"
+            properties:
+              premiums_amount:
+                $ref: '#/definitions/Amount'
+              premium_social_contributions_amount:
+                $ref: '#/definitions/Amount'
+              premiums_PFL_amount:
+                $ref: '#/definitions/Amount'
+              net_premiums_amount:
+                $ref: '#/definitions/Amount'
+          sum_of_capitalizations_or_distributions_data:
+            type: object
+            description: "capitalisations ou distributions cumulées\r\n"
+            properties:
+              gross_interests_amount:
+                $ref: '#/definitions/Amount'
+              PFL_amount:
+                $ref: '#/definitions/Amount'
+              social_contributions_amount:
+                $ref: '#/definitions/Amount'
+              net_interests_amount:
+                $ref: '#/definitions/Amount'
+              distributed_premiums_amount:
+                $ref: '#/definitions/Amount'
+              capitalized_premiums_amount:
+                $ref: '#/definitions/Amount'
+          sum_of_schedulded_reimubursement:
+            type: object
+            description: "retraits programmés cumulés\r\n"
+            properties:
+              gross_interests_amount:
+                $ref: '#/definitions/Amount'
+              PFL_amount:
+                $ref: '#/definitions/Amount'
+              social_contributions_amount:
+                $ref: '#/definitions/Amount'
+              net_interests_amount:
+                $ref: '#/definitions/Amount'
+              capital_reiumbursement_amount:
+                $ref: '#/definitions/Amount'
+              net_customer_amount:
+                $ref: '#/definitions/Amount'
+          sum_of_payment_at_due_date:
+            type: object
+            description: "paiement à échéance cumulé\r\n"
+            properties:
+              gross_interests_amount:
+                $ref: '#/definitions/Amount'
+              PFL_amount:
+                $ref: '#/definitions/Amount'
+              social_contributions_amount:
+                $ref: '#/definitions/Amount'
+              premiums_when_expirity_amount:
+                $ref: '#/definitions/Amount'
+              net_interests_amount:
+                $ref: '#/definitions/Amount'
+              net_capital_amount:
+                $ref: '#/definitions/Amount'
+              net_customer_amount:
+                $ref: '#/definitions/Amount'
+              net_global_amount:
+                $ref: '#/definitions/Amount'
+      calculated_interests_details:
+        description: "tableau détails des intérêts calculés\r\n"
+        type: array
+        items:
+          type: object
+          properties:
+            event_date:
+              type: string
+              format: date
+              description: "date d'évènement\r\n"
+            event_type_code:
+              type: string
+              description: "CODE TYPE EVENEMENT\r\n\r\nCA : capitalisation\r\nDI : distrubution d'interêt\r\nPR prélèvements\r\nRE\" remboursement\r\n\r\n"
+              enum:
+                - ' '
+                - CA
+                - DI
+                - PR
+                - RE
+            rate_of_interests_payment:
+              type: number
+              description: "taux du paiement d'intérêt\r\n"
+            outstanding:
+              $ref: '#/definitions/Amount'
+            gross_interests_amount:
+              $ref: '#/definitions/Amount'
+            PFL_amount:
+              $ref: '#/definitions/Amount'
+            sum_of_social_contributions_amount:
+              $ref: '#/definitions/Amount'
+            total_tax_amount:
+              $ref: '#/definitions/Amount'
+            net_interests_amount:
+              $ref: '#/definitions/Amount'
+            net_amount:
+              $ref: '#/definitions/Amount'
+            premiums_detail_amount:
+              $ref: '#/definitions/Amount'
+      gross_annual_actuarial_rate_of_return_data:
+        type: object
+        description: "Données relatives au TRAAB\r\n"
+        properties:
+          per_year_data:
+            description: "tableau des TRAAB à dates d'anniversaires\r\n\r\n"
+            type: array
+            items:
+              type: object
+              properties:
+                anniversary_date:
+                  type: string
+                  format: date
+                  description: "DATE anniversaire\r\n"
+                gross_return_annual_rate:
+                  type: number
+                  description: "TAUX RENDEMENT ANNUEL BRUT\r\n"
+          simulated_example:
+            description: "exemple d'une simulation en date (milieu de vie du produit)\r\n\r\n\r\n"
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+                description: "date exemple\r\n"
+              reimbursed_capital:
+                $ref: '#/definitions/Amount'
+              gross_interests:
+                $ref: '#/definitions/Amount'
+              penalty_on_interest_amount:
+                $ref: '#/definitions/Amount'
+              net_interests:
+                $ref: '#/definitions/Amount'
+              net_customer_amount:
+                $ref: '#/definitions/Amount'
+              PFL_amount:
+                $ref: '#/definitions/Amount'
+              social_contributions_amount:
+                $ref: '#/definitions/Amount'
+    x-stoplight:
+      id: lxx31jl0uksej
+  DATLevelRate:
+    title: DATLevelRate
+    type: object
+    description: Taux paliers
+    properties:
+      level_rate_data:
+        type: object
+        description: "informations sur les taux paliers\r\n"
+        properties:
+          minimum_interval_duration:
+            type: string
+            description: "durée minimale de l'intervalle (en mois)\r\n\r\n\"Selon périodicité de la variation du taux :\r\n' '\r\n001 quand mensuelle\r\n003 quand trimestrielle\r\n006 quand semestrielle\r\n012 quand annuelle\"\r\n"
+            enum:
+              - ' '
+              - '001'
+              - '003'
+              - '006'
+              - '012'
+          nature_of_rate_variation:
+            type: string
+            description: "code nature variation de taux\r\n"
+          nature_of_level_rate:
+            type: string
+            description: "code nature du taux palier\r\n"
+          level_rate_data:
+            type: array
+            description: "tableau des palliers\r\n"
+            items:
+              type: object
+              properties:
+                number_of_months_for_start_of_rate_bracket:
+                  type: integer
+                  description: "nombre de mois debut tranche taux\r\n"
+                number_of_months_for_end_of_rate_bracket:
+                  type: integer
+                  description: "nombre de mois fin tranche taux\r\n"
+                network_variation_in_addition:
+                  type: number
+                  description: "variation reseau en plus\r\n"
+                variation_sign:
+                  type: string
+                  description: "signe de la variation\r\n"
+                starting_date:
+                  type: string
+                  format: date
+                  description: "date début validité des variations de taux\r\n"
+                expiry_date:
+                  type: string
+                  description: "date fin validité des variations de taux\r\n"
+                  format: date
+                application_of_rate_variation_on_anticipated_reimbursement:
+                  type: string
+                  description: "code application retrait anticipe\r\n\r\nO : OUI\r\nN : NON\"\r\n"
+                  enum:
+                    - ' '
+                    - O
+                    - 'N'
+                level_rate_of_progressive_rate:
+                  type: number
+                  description: "taux palier de taux progressif = taux palier\r\n\r\ntoujours positif, sinon mis à zéro\r\n"
+    x-stoplight:
+      id: q7txoegjnpwsk
+  Paging:
+    title: Paging
+    type: object
+    description: 'Objet regroupant les attributs de pagination appliqués à la réponse. '
+    required:
+      - count
+      - total
+    properties:
+      count:
+        type: integer
+        description: Nombre d'occurrences restituées.
+      total:
+        type: integer
+        description: 'Nombre total d''occurrences de la liste. '
+      last_page:
+        type: integer
+        description: 'Numéro de la dernière page, sur la base de la quantité souhaitée.'
+    x-stoplight:
+      id: 5fy34eqrzwpbc
+tags:
+  - name: API DAT
+    description: API DAT
